@@ -1,0 +1,117 @@
+
+<?php  include 'header.php';
+ //include 'function.php'
+ if (isset($_SESSION['role'])) {
+                  
+//$id = $_SESSION['role'];
+//$id = $_REQUEST[$_SESSION['role']];
+$_SESSION['name'] = $_SESSION['role'];
+
+                } else {
+                                
+$id = $_REQUEST['name'];
+$_SESSION['name'] = $id;
+                }
+
+?>
+
+    <title>Live chat </title>
+    <link rel="stylesheet" href="css/chat_style.css">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+</head>
+
+</br></br></br>
+ 
+
+<?php
+if (isset ( $_POST ['enter'] )) {
+    if ($_POST ['name'] != "") {
+        $_SESSION ['name'] = stripslashes ( htmlspecialchars ( $_POST ['name'] ) );
+        $cb = fopen ( "log.html", 'a' );
+        fwrite ( $cb, "<div class='msgln'><i>User " . $_SESSION ['name'] . " has joined the chat.</i><br></div>" );
+        fclose ( $cb );
+    } else {
+        echo '<span class="error">Please Enter a Name</span>';
+    }
+}
+ 
+if (isset ( $_GET ['logout'] )) {
+    $cb = fopen ( "log.html", 'a' );
+    fwrite ( $cb, "<div class='msgln'><i>User " . $_SESSION ['name'] . " has left the chat.</i><br></div>" );
+    fclose ( $cb );
+    session_destroy ();
+    header ( "Location: index.php" );
+}
+
+    if (isset($_SESSION ['name'] )) {
+    ?>
+<div id="wrapper">
+    <div id="menu">
+    <h1>Start Chat Now!</h1><hr/>
+        <p class="welcome"><b>HI - <a><?php echo $_SESSION['name']; ?></a></b></p>
+        <p class="logout"><a id="exit" href="#" class="btn btn-default">Exit Live Chat</a></p>
+    <div style="clear: both"></div>
+    </div>
+    <div id="chatbox">
+    <?php
+        if (file_exists ( "log.html" ) && filesize ( "log.html" ) > 0) {
+        $handle = fopen ( "log.html", "r" );
+        $contents = fread ( $handle, filesize ( "log.html" ) );
+        fclose ( $handle );
+
+        echo $contents;
+        }
+    ?>
+    </div>
+<form name="message" action="">
+    <input name="usermsg" class="form-control" type="text" id="usermsg" placeholder="Create A Message" autofocus required />
+    <div class="button-panel">
+     <input type="submit" name="submitmsg" class="button"  id="submitmsg" value="Send" style="background-color:green"/>
+    </div>
+</form>
+</div>
+<script type="text/javascript">
+$(document).ready(function(){
+});
+$(document).ready(function(){
+    $("#exit").click(function(){
+        var exit = confirm("Are You Sure You Want To Leave This Page?");
+        if(exit==true){window.location = 'index.php?logout=true';}     
+    });
+});
+$("#submitmsg").click(function(){
+        var clientmsg = $("#usermsg").val();
+        $.post("post.php", {text: clientmsg});             
+        $("#usermsg").attr("value", "");
+        loadLog;
+    return false;
+});
+function loadLog(){    
+    var oldscrollHeight = $("#chatbox").attr("scrollHeight") - 20;
+    $.ajax({
+        url: "log.html",
+        cache: false,
+        success: function(html){       
+            $("#chatbox").html(html);       
+            var newscrollHeight = $("#chatbox").attr("scrollHeight") - 20;
+            if(newscrollHeight > oldscrollHeight){
+                $("#chatbox").animate({ scrollTop: newscrollHeight }, 'normal');
+            }              
+        },
+    });
+}
+setInterval (loadLog, 2500);
+</script>
+<?php
+}
+?>
+<div class=" Footer navbar  navbar-fixed-bottom ">
+<div class="container">
+
+<?php
+include "footer.php";
+?> 
+</div></div>
+</div>
+</html>
